@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Auto Fetch Status (3s delay)</title>
+</head>
+
+<body>
+    <h1>Status Fetcher (3 seconds between calls)</h1>
+    <div id="log" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;"></div>
+
+    <script>
+        const endpoint = "https://r2uploader.runasp.net/api/Upload/status";
+        const log = document.getElementById("log");
+        const delayBetweenCallsMs = 3000; // 3 seconds
+        const totalCalls = 10;
+
+        function logMessage(message) {
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement("div");
+            entry.textContent = `[${time}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function callEndpoint(index) {
+            try {
+                const response = await fetch(endpoint);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.text(); // use .json() if JSON
+                logMessage(`Call #${index + 1}: Success`);
+                console.log(`Call #${index + 1} data:`, data);
+            } catch (error) {
+                logMessage(`Call #${index + 1}: Failed (${error.message})`);
+                console.error(`Call #${index + 1} error:`, error);
+            }
+        }
+
+        async function runBatch() {
+            logMessage("Starting 10 requests (3s delay each)...");
+            for (let i = 0; i < totalCalls; i++) {
+                await callEndpoint(i);
+                if (i < totalCalls - 1) {
+                    await new Promise(resolve => setTimeout(resolve, delayBetweenCallsMs));
+                }
+            }
+        }
+
+        // Run the batch once immediately
+        runBatch();
+
+        // Then every 60 seconds
+        setInterval(runBatch, 60000);
+    </script>
+</body>
+
+</html>
